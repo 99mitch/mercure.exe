@@ -6,7 +6,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { createAppKit } from '@reown/appkit/react'
 import { wagmiAdapter, wagmiConfig, networks, reownProjectId, hasAppKit } from '@/lib/wagmi'
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
 
 if (hasAppKit && typeof window !== 'undefined') {
   createAppKit({
