@@ -1,0 +1,40 @@
+/* mercure.exe — brand tokens. Sampled from the master assets; do not eyeball new values.
+   See CLAUDE-app.md §2 (color), §3 (type), §5 (timing). */
+:root {
+  --black:      #000000;
+  --lime:       #E2FF00;
+  --lime-mid:   #ABD204;
+  --lime-deep:  #2F4300;
+  --highlight:  #F0FDA0;
+
+  --grey-90:    #0E0E0E;
+  --grey-70:    #2A2A2A;
+  --grey-40:    #6E6E6E;
+  --grey-10:    #E8E8E8;
+
+  /* type scale — the display/body jump is violent on purpose */
+  --fs-display: clamp(3.5rem, 9vw, 9rem);
+  --lh-display: 0.92;
+  --ls-display: -0.03em;
+
+  --fs-h2:      clamp(1.75rem, 3vw, 2.5rem);
+  --lh-h2:      1.1;
+  --ls-h2:      -0.01em;
+
+  --fs-body:    1.0625rem;
+  --lh-body:    1.55;
+
+  --fs-mono:    0.875rem;
+  --lh-mono:    1.4;
+  --ls-mono:    0.02em;
+
+  --measure:    68ch;
+
+  /* motion */
+  --ease-out:   cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-io:    cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-fast:   240ms;
+  --dur-base:   520ms;
+  --dur-slow:   900ms;
+  --stagger:    60ms;
+}

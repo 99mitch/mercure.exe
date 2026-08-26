@@ -1,0 +1,105 @@
+@import 'tailwindcss';
+@import '../lib/tokens.css';
+
+@theme {
+  --color-*: initial;
+  --color-black: var(--black);
+  --color-lime: var(--lime);
+  --color-lime-mid: var(--lime-mid);
+  --color-lime-deep: var(--lime-deep);
+  --color-highlight: var(--highlight);
+  --color-grey-90: var(--grey-90);
+  --color-grey-70: var(--grey-70);
+  --color-grey-40: var(--grey-40);
+  --color-grey-10: var(--grey-10);
+  --color-white: #ffffff;
+  --color-transparent: transparent;
+
+  --font-display: var(--font-departure), 'Departure Mono', ui-monospace, monospace;
+  --font-sans: var(--font-inter-tight), 'Inter Tight', system-ui, sans-serif;
+  --font-mono: var(--font-plex-mono), 'IBM Plex Mono', ui-monospace, SFMono-Regular, monospace;
+
+  --ease-out: var(--ease-out);
+  --ease-io: var(--ease-io);
+}
+
+@layer base {
+  html {
+    background: var(--black);
+    color: var(--grey-10);
+    font-family: var(--font-sans);
+    font-size: 100%;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  body {
+    font-size: var(--fs-body);
+    line-height: var(--lh-body);
+    min-height: 100dvh;
+  }
+  ::selection {
+    background: var(--lime);
+    color: var(--black);
+  }
+
+  /* Focus: always visible, always --highlight. Never outline:none without this. */
+  :focus-visible {
+    outline: 2px solid var(--highlight);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+
+  /* Lenis */
+  html.lenis-on { height: auto; }
+  .lenis.lenis-smooth { scroll-behavior: auto !important; }
+  .lenis.lenis-smooth [data-lenis-prevent] { overscroll-behavior: contain; }
+  .lenis.lenis-stopped { overflow: hidden; }
+
+  /* Page-load sequence gates. `data-motion` is set by an inline script only when JS runs
+     AND the user has not asked for reduced motion. With no JS the page is complete. */
+  html[data-motion] .js-typed { visibility: hidden; }
+  html[data-motion] .js-typed[data-ready] { visibility: visible; }
+  html[data-motion] .js-fade { opacity: 0; }
+  html[data-motion] .js-fade[data-ready] { opacity: 1; }
+}
+
+@utility text-display {
+  font-family: var(--font-display);
+  font-size: var(--fs-display);
+  line-height: var(--lh-display);
+  letter-spacing: var(--ls-display);
+}
+@utility text-h2 {
+  font-size: var(--fs-h2);
+  line-height: var(--lh-h2);
+  letter-spacing: var(--ls-h2);
+  font-weight: 400;
+}
+@utility text-body {
+  font-size: var(--fs-body);
+  line-height: var(--lh-body);
+}
+@utility text-mono {
+  font-family: var(--font-mono);
+  font-size: var(--fs-mono);
+  line-height: var(--lh-mono);
+  letter-spacing: var(--ls-mono);
+  font-variant-numeric: tabular-nums;
+}
+@utility text-label {
+  font-family: var(--font-mono);
+  font-size: var(--fs-mono);
+  line-height: var(--lh-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+@utility measure {
+  max-width: var(--measure);
+}
+
+/* Wordmark cursor: blinks only after the type-in completes, only when motion is allowed. */
+@keyframes mx-blink { 0%, 49% { opacity: 1 } 50%, 100% { opacity: 0 } }
+html[data-motion] .cursor-blink { animation: mx-blink 1.1s steps(1) infinite; }
+
+/* Blob layer fade for the load sequence */
+.js-fade { transition: opacity var(--dur-slow) var(--ease-out); }
