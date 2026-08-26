@@ -36,13 +36,17 @@ export const buttonVariants = cva(
 type Variants = VariantProps<typeof buttonVariants>
 
 type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & Variants & { href?: undefined }
-type LinkProps = Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, 'href'> & Variants & { href: string }
+type LinkProps = Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, 'href'> & Variants & { href: string; disabled?: boolean }
 
 export function Button(props: ButtonProps | LinkProps) {
   const { tone, size, block, className, ...rest } = props
   const classes = cn(buttonVariants({ tone, size, block }), className)
   if ('href' in rest && typeof rest.href === 'string') {
-    const { href, ...a } = rest as LinkProps
+    const { href, disabled, ...a } = rest as LinkProps
+    if (disabled) {
+      // A link that goes nowhere yet: same box, same weight, not focusable, announced as disabled.
+      return <span role="link" aria-disabled="true" className={cn(classes, 'cursor-not-allowed opacity-50')} {...(a as React.HTMLAttributes<HTMLSpanElement>)} />
+    }
     return <Link href={href} className={classes} {...a} />
   }
   const b = rest as ButtonProps

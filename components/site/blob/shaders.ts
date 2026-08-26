@@ -45,16 +45,28 @@ float snoise(vec3 v) {
 }
 `
 
-/** Low-frequency, slow-drift displacement along the normal. */
+/**
+ * The form: a base sphere with four gaussian lobes on it (the splat), plus a thin layer of
+ * slow simplex flow so the surface reads as liquid. Droplets use uLobeAmp = 0 and uBase = 1.
+ */
 export const DISPLACE = /* glsl */ `
 uniform float uTime;
 uniform float uAmp;
 uniform float uFreq;
+uniform float uBase;
+uniform vec3 uLobeDir[4];
+uniform vec2 uLobeParam[4]; // amp, sharpness
 vec3 displace(vec3 p) {
+  vec3 n = normalize(p);
+  float r = uBase;
+  for (int i = 0; i < 4; i++) {
+    float d = max(0.0, dot(n, uLobeDir[i]));
+    r += uLobeParam[i].x * exp(-uLobeParam[i].y * (1.0 - d));
+  }
   float t = uTime;
-  float n = snoise(p * uFreq + vec3(t * 0.09, t * 0.07, -t * 0.05));
-  n += 0.35 * snoise(p * uFreq * 2.1 - vec3(0.0, t * 0.05, t * 0.08));
-  return p + normalize(p) * n * uAmp;
+  float flow = snoise(n * uFreq + vec3(t * 0.09, t * 0.07, -t * 0.05));
+  flow += 0.35 * snoise(n * uFreq * 2.1 - vec3(0.0, t * 0.05, t * 0.08));
+  return n * (r + flow * uAmp);
 }
 `
 

@@ -8,8 +8,15 @@ export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: { default: 'mercure.exe', template: '%s — mercure.exe' },
   description: 'The messenger runs onchain. Yield routes on Robinhood Chain you can read in one sentence.',
-  openGraph: { images: ['/api/og'], siteName: 'mercure.exe', type: 'website' },
-  twitter: { card: 'summary_large_image' },
+  openGraph: {
+    type: 'website',
+    siteName: 'mercure.exe',
+    title: 'mercure.exe',
+    description: 'The messenger runs onchain. Yield routes on Robinhood Chain you can read in one sentence.',
+    url: siteUrl,
+    images: [{ url: '/api/og', width: 1200, height: 630, alt: 'mercure.exe — the messenger runs onchain.' }],
+  },
+  twitter: { card: 'summary_large_image', title: 'mercure.exe', description: 'The messenger runs onchain.', images: ['/api/og'] },
 }
 
 export const viewport: Viewport = {

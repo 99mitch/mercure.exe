@@ -37,6 +37,19 @@ lib/routes.ts       routing engine (MOCK) — getRoute / listMarkets / describeR
 lib/tokens.css      brand tokens
 ```
 
+## The blob on the site
+
+One fixed canvas for the whole page (`BlobStage`, site layout), choreographed by scroll:
+`blob/pose.ts` holds a pose per section (`x`/`y` in viewport units, `scale`, `spread` = how far
+the four droplets detach to their slots, `calm` = surface stops moving, `rot`); `blob/director.ts`
+scrubs the shared target from the previous section's pose to the next as each `data-blob-pose`
+section enters; `blob/scene.ts` damps toward the target every frame. Poses keep the body in the
+margins — only droplets sit among the type. Mobile / coarse pointer / reduced motion get the
+still (`public/blob-still.webp`, the master render) in the hero and no canvas.
+
+Sections: Hero → Ticker (engine sentences) → Stats (engine figures) → How it works → The sentence
+(pinned, cycles real routes) → Markets → Manifesto → The signing page (specimen) → Footer.
+
 ## The blob budget
 
 `CLAUDE-app.md` §6 caps the blob at 180 KB gzipped beyond the base bundle. The R3F + drei +
@@ -51,7 +64,7 @@ Everything else gets `public/blob-still.svg`, which is always in the DOM for fir
 
 ## Placeholders to replace
 
-- `public/blob-still.svg` — generated placeholder; drop in the pre-rendered still from the master assets.
+- `public/blob-still.svg` — old generated placeholder, unused; `blob-still.webp` is the master render.
 - `components/ui/Wordmark.tsx` — renders `mercure.exe_` in Departure Mono; swap for the wordmark SVG when it lands.
 - `lib/routes.ts` — mock routing engine. Keep the types, replace the bodies.
 - `lib/chain.ts` — RPC / explorer URLs for Robinhood Chain (4663) are best guesses; override with `NEXT_PUBLIC_RH_RPC_URL`.

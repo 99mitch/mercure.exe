@@ -2,10 +2,10 @@
    See CLAUDE-app.md §2 (color), §3 (type), §5 (timing). */
 :root {
   --black:      #000000;
-  --lime:       #E2FF00;
-  --lime-mid:   #ABD204;
-  --lime-deep:  #2F4300;
-  --highlight:  #F0FDA0;
+  --lime:       #A8D000;  /* blob body, sampled from the master render. UI accent. */
+  --lime-mid:   #8DB000;  /* hover / pressed, secondary fills */
+  --lime-deep:  #203000;  /* blob shadow. borders, dividers, inert surfaces */
+  --highlight:  #F0F8A0;  /* specular. focus rings and active glow only */
 
   --grey-90:    #0E0E0E;
   --grey-70:    #2A2A2A;

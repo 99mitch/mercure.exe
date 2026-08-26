@@ -3,17 +3,16 @@
 import dynamic from 'next/dynamic'
 import { useEffect, useState } from 'react'
 import { prefersReducedMotion } from '@/lib/motion'
-import { BlobStill } from './BlobStill'
 
 const Blob = dynamic(() => import('./Blob').then((m) => m.Blob), { ssr: false })
 
 /**
- * Desktop with a fine pointer and no reduced-motion preference: WebGL over the still.
- * Everything else: the still. The still is always in the DOM so first paint is complete.
+ * The blob lives here for the whole site: one fixed canvas behind the content, choreographed
+ * by scroll (see blob/director.ts). Desktop with a fine pointer only; everything else keeps the
+ * still that the Hero always renders. `html[data-blob-live]` lets CSS hide that still.
  */
-export function BlobSwitch({ className }: { className?: string }) {
+export function BlobStage() {
   const [webgl, setWebgl] = useState(false)
-  const [live, setLive] = useState(false)
 
   useEffect(() => {
     if (prefersReducedMotion()) return
@@ -24,14 +23,14 @@ export function BlobSwitch({ className }: { className?: string }) {
     return () => mq.removeEventListener('change', check)
   }, [])
 
+  useEffect(() => {
+    if (!webgl) document.documentElement.removeAttribute('data-blob-live')
+  }, [webgl])
+
+  if (!webgl) return null
   return (
-    <div className={className} data-blob>
-      <BlobStill className={live ? 'invisible' : undefined} />
-      {webgl ? (
-        <div className="absolute inset-0">
-          <Blob onReady={() => setLive(true)} />
-        </div>
-      ) : null}
+    <div className="pointer-events-none fixed inset-0 z-0 js-fade" data-ready="" aria-hidden="true">
+      <Blob onReady={() => document.documentElement.setAttribute('data-blob-live', '')} />
     </div>
   )
 }

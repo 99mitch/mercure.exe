@@ -7,24 +7,25 @@ import { formatAmount, formatBps, formatFee } from '@/lib/format'
 
 export const runtime = 'nodejs'
 
-const LIME = '#E2FF00'
+const LIME = '#A8D000'
 const BLACK = '#000000'
 const GREY_40 = '#6E6E6E'
 const GREY_10 = '#E8E8E8'
 
-let fontCache: Promise<{ display: ArrayBuffer; sans: ArrayBuffer; mono: ArrayBuffer }> | null = null
-function fonts() {
-  fontCache ??= (async () => {
+let assetCache: Promise<{ display: ArrayBuffer; sans: ArrayBuffer; mono: ArrayBuffer; blob: string }> | null = null
+function assets() {
+  assetCache ??= (async () => {
     const dir = path.join(process.cwd(), 'assets', 'og')
-    const [display, sans, mono] = await Promise.all([
+    const [display, sans, mono, blob] = await Promise.all([
       readFile(path.join(dir, 'DepartureMono-Regular.otf')),
       readFile(path.join(dir, 'inter-tight-latin-400-normal.woff')),
       readFile(path.join(dir, 'ibm-plex-mono-latin-400-normal.woff')),
+      readFile(path.join(dir, 'blob.png')),
     ])
     const toAB = (b: Buffer) => b.buffer.slice(b.byteOffset, b.byteOffset + b.byteLength) as ArrayBuffer
-    return { display: toAB(display), sans: toAB(sans), mono: toAB(mono) }
+    return { display: toAB(display), sans: toAB(sans), mono: toAB(mono), blob: `data:image/png;base64,${blob.toString('base64')}` }
   })()
-  return fontCache
+  return assetCache
 }
 
 /**
@@ -35,7 +36,7 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
   const txId = searchParams.get('tx')
   const title = searchParams.get('title')
-  const f = await fonts()
+  const f = await assets()
 
   let headline = 'The messenger runs onchain.'
   let rows: [string, string][] = [['Chain', 'Robinhood Chain · 4663']]
@@ -72,12 +73,22 @@ export async function GET(req: NextRequest) {
           color: GREY_10,
           padding: 72,
           fontFamily: 'Inter Tight',
+          position: 'relative',
         }}
       >
+        {/* the master render, bleeding off the right edge like the hero */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={f.blob}
+          alt=""
+          width={640}
+          height={640}
+          style={txId ? { position: 'absolute', right: -110, top: 30, width: 540, height: 540 } : { position: 'absolute', right: -90, top: -20, width: 640, height: 640 }}
+        />
         <div style={{ display: 'flex', fontFamily: 'Departure Mono', fontSize: 40, color: LIME, letterSpacing: -1 }}>
           mercure.exe_
         </div>
-        <div style={{ display: 'flex', fontSize: txId ? 52 : 68, lineHeight: 1.1, letterSpacing: -1.5, maxWidth: 1000 }}>
+        <div style={{ display: 'flex', fontSize: txId ? 46 : 64, lineHeight: 1.08, letterSpacing: -1.5, maxWidth: txId ? 620 : 720 }}>
           {headline}
         </div>
         <div style={{ display: 'flex', gap: 48, fontFamily: 'IBM Plex Mono', fontSize: 22 }}>

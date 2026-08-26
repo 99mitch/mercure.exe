@@ -3,7 +3,7 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { Parallax, Z } from './Parallax'
 
-/** Positions the blob in the hero and fades it in as part of the load sequence. */
+/** Positions the hero still and fades it in as part of the load sequence. Hidden once the WebGL stage is live. */
 export function BlobLayer({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false)
   useEffect(() => {
@@ -12,7 +12,7 @@ export function BlobLayer({ children }: { children: ReactNode }) {
   }, [])
 
   return (
-    <div className="pointer-events-none absolute inset-x-0 top-24 bottom-0 -z-10 flex items-start justify-center md:inset-0 md:items-center md:justify-end md:pr-[3vw]">
+    <div className="hero-still pointer-events-none absolute inset-x-0 top-24 bottom-0 -z-10 flex items-start justify-center md:inset-0 md:items-center md:justify-end md:pr-[3vw]">
       <Parallax speed={Z.far} anchor="top">
         <div data-ready={ready ? '' : undefined} className="js-fade">
           {children}

@@ -1,19 +1,41 @@
+import Link from 'next/link'
 import { Wordmark } from '@/components/ui/Wordmark'
+import { Label } from '@/components/ui/Label'
 import { ROBINHOOD_CHAIN_ID } from '@/lib/chain'
+
+const COLS: [string, [string, string][]][] = [
+  ['Product', [['Open a route · soon', '#'], ['Markets', '#markets'], ['How it works', '#how']]],
+  ['Protocol', [[`Robinhood Chain · ${ROBINHOOD_CHAIN_ID}`, '#'], ['Morpho markets', '#markets'], ['The signing page · soon', '#']]],
+]
 
 export function Footer() {
   return (
-    <footer className="border-t border-lime-deep px-5 py-10 sm:px-8 lg:px-12">
-      <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+    <footer data-blob-pose="footer" className="relative z-10 border-t border-lime-deep bg-black px-5 pt-16 pb-10 sm:px-8 lg:px-12">
+      <div className="grid gap-12 md:grid-cols-[1.4fr_1fr_1fr]">
         <div>
-          <Wordmark className="text-[1.5rem] text-lime" />
-          <p className="mt-3 text-body text-grey-10/80">The messenger runs onchain.</p>
+          <Wordmark className="text-[clamp(2rem,4vw,3rem)] text-lime" />
+          <p className="mt-4 text-body text-grey-10/80 max-w-[28ch]">The messenger runs onchain.</p>
         </div>
-        <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-mono">
-          <dt className="text-grey-40">CHAIN</dt><dd className="text-grey-10">Robinhood Chain · {ROBINHOOD_CHAIN_ID}</dd>
-          <dt className="text-grey-40">ROUTES</dt><dd className="text-grey-10">Morpho</dd>
-          <dt className="text-grey-40">STATUS</dt><dd className="text-grey-10">Preview</dd>
-        </dl>
+        {COLS.map(([title, links]) => (
+          <div key={title}>
+            <Label as="p" className="mb-4">{title}</Label>
+            <ul className="space-y-2 text-mono">
+              {links.map(([label, href]) => (
+                <li key={label}>
+                  {href === '#' ? (
+                    <span className={label.endsWith('soon') ? 'text-grey-40' : 'text-grey-10'}>{label}</span>
+                  ) : (
+                    <Link href={href} className="link-line text-grey-10 hover:text-lime">{label}</Link>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </div>
+      <div className="mt-16 flex flex-col gap-2 border-t border-lime-deep pt-5 text-mono text-grey-40 md:flex-row md:justify-between">
+        <span>© 2026 mercure.exe — preview</span>
+        <span>Chain id <span className="text-grey-10">{ROBINHOOD_CHAIN_ID}</span> · routes are described or not offered</span>
       </div>
     </footer>
   )

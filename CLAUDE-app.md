@@ -29,16 +29,18 @@ Sampled from the master assets — use these exact values, don't eyeball new one
 
 ```css
 --black:        #000000;  /* true black. not #0A0A0A, not #111. the assets are pure black */
---lime:         #E2FF00;  /* primary. the wordmark color. UI accent, links, focus */
---lime-mid:     #ABD204;  /* blob body midtone. hover/pressed, secondary fills */
---lime-deep:    #2F4300;  /* blob shadow. borders, dividers, inert surfaces */
---highlight:    #F0FDA0;  /* specular. use ONLY for focus rings and active glow */
+--lime:         #A8D000;  /* primary. the blob body, sampled from the master render. wordmark, UI accent, links */
+--lime-mid:     #8DB000;  /* hover/pressed, secondary fills */
+--lime-deep:    #203000;  /* blob shadow. borders, dividers, inert surfaces */
+--highlight:    #F0F8A0;  /* specular. use ONLY for focus rings and active glow */
 
 --grey-90:      #0E0E0E;  /* signing page surface */
 --grey-70:      #2A2A2A;  /* signing page borders */
 --grey-40:      #6E6E6E;  /* secondary text */
 --grey-10:      #E8E8E8;  /* signing page body text */
 ```
+
+(Values re-sampled 2026-08-26 from `ChatGPT Image 20 août 2026, 18_03_21.png`; the accent is the blob body, not a neon.)
 
 **Discipline:** `--lime` is loud. On the site it can carry a whole section. On the signing page it appears **once per screen, maximum** — the connect state, or the approve button, never both. A page where everything is lime is a page where nothing is.
 

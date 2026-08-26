@@ -58,6 +58,9 @@ export function createMotionRuntime(): MotionRuntime {
   }
 
   ensureGsap()
+  // Anything that still calls window.requestAnimationFrame directly (motion's springs, third
+  // parties) is routed through the same loop. Lenis, GSAP and the blob subscribe explicitly.
+  Tempus.patch()
 
   const lenis = new Lenis({
     autoRaf: false,
@@ -75,6 +78,7 @@ export function createMotionRuntime(): MotionRuntime {
       unsubLenis?.()
       lenis.off('scroll', ScrollTrigger.update)
       lenis.destroy()
+      Tempus.unpatch()
       document.documentElement.classList.remove('lenis-on')
     },
   }

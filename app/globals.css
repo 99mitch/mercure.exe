@@ -103,3 +103,18 @@ html[data-motion] .cursor-blink { animation: mx-blink 1.1s steps(1) infinite; }
 
 /* Blob layer fade for the load sequence */
 .js-fade { transition: opacity var(--dur-slow) var(--ease-out); }
+
+/* Hero still steps aside once the page-wide WebGL stage is live */
+html[data-blob-live] .hero-still { visibility: hidden; }
+
+/* Animated underline for text links on the site (never on /tx) */
+.link-line {
+  text-decoration: none;
+  background-image: linear-gradient(currentColor, currentColor);
+  background-repeat: no-repeat;
+  background-size: 0% 1px;
+  background-position: 0 100%;
+  transition: background-size var(--dur-fast) var(--ease-out), color var(--dur-fast) var(--ease-out);
+}
+.link-line:hover, .link-line:focus-visible { background-size: 100% 1px; }
+@media (prefers-reduced-motion: reduce) { .link-line { transition: none; } }

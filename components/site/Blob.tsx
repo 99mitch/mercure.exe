@@ -2,8 +2,9 @@
 
 import { useEffect, useRef } from 'react'
 import { createBlobScene } from './blob/scene'
+import { createBlobChoreography } from './blob/director'
 
-/** Mounts the WebGL blob into a canvas. Desktop only — BlobSwitch decides. */
+/** Mounts the WebGL blob into a canvas and wires the scroll choreography. BlobStage decides when. */
 export function Blob({ onReady }: { onReady?: () => void }) {
   const ref = useRef<HTMLCanvasElement>(null)
   const readyRef = useRef(onReady)
@@ -12,10 +13,17 @@ export function Blob({ onReady }: { onReady?: () => void }) {
   useEffect(() => {
     const canvas = ref.current
     if (!canvas) return
+    let disposeScene: (() => void) | undefined
+    let disposeChoreo: (() => void) | undefined
     try {
-      return createBlobScene(canvas, () => readyRef.current?.())
+      disposeScene = createBlobScene(canvas, () => readyRef.current?.())
+      disposeChoreo = createBlobChoreography()
     } catch (e) {
       console.warn('[blob] WebGL init failed, keeping the still.', e)
+    }
+    return () => {
+      disposeChoreo?.()
+      disposeScene?.()
     }
   }, [])
 

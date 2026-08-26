@@ -190,3 +190,21 @@ export function toRouteTx(route: Route): RouteTx {
     chainId: route.chainId,
   }
 }
+
+/** Aggregate figures for the site (mock — replace with the engine's stats endpoint). */
+export type Stats = { routedUsd: number; routesSigned: number; avgNetApyBps: number; openMarkets: number }
+export function getStats(): Stats {
+  const open = MARKETS.filter((m) => m.status === 'open')
+  return {
+    routedUsd: 12_400_000,
+    routesSigned: 1_284,
+    avgNetApyBps: Math.round(open.reduce((a, m) => a + m.netApyBps, 0) / open.length),
+    openMarkets: open.length,
+  }
+}
+
+/** Sentences for the live ticker — every one of them a route the engine would actually offer. */
+export async function listRecentSentences(): Promise<string[]> {
+  const routes = await Promise.all(Object.keys(SEEDS).filter((k) => k !== 'expired').map((k) => getRoute(k)))
+  return routes.filter((r): r is Route => Boolean(r)).map(describeRoute)
+}
