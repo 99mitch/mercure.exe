@@ -16,7 +16,24 @@ cp .env.example .env.local   # fill NEXT_PUBLIC_REOWN_PROJECT_ID for WalletConne
 pnpm dev
 ```
 
-Demo routes: `/tx/demo`, `/tx/demo-withdraw`, `/tx/demo-wbtc`, `/tx/expired`, `/tx/anything-else` (404).
+## Route links
+
+A route is not stored anywhere — the id *is* the route. `encodeRouteId()` packs the intent
+(kind, market key, amount, issue time) into a url-safe token with a checksum; `getRoute()`
+unpacks it and rebuilds the transaction. So whatever mints the link needs no shared database
+with the site, and the link carries its own ten-minute expiry.
+
+```ts
+import { encodeRouteId } from '@/lib/routes'
+
+const id = encodeRouteId({ kind: 'deposit', marketKey: 'morpho-usdg-weth', amount: '5000' })
+// -> /tx/MXxkfG1vcnBoby11c2RnLXdldGh8NTAwMHx0a2ZuOXo.1cvoosn
+```
+
+`/tx/<id>` 404s when the token is malformed, truncated, tampered with, or names a market that
+is not `open`. It renders the expired state once `issuedAt + 10min` has passed. The checksum
+guards against bad copy/paste — it is not a signature, and route ids are not secrets: the id
+only describes a transaction the wallet shows in full before it is signed.
 
 `pnpm lint` enforces the surface boundary (ESLint `boundaries/dependencies`): nothing under
 `components/ui`, `components/sign` or `app/tx` may import `lib/motion.ts`, GSAP, Lenis, Tempus,
@@ -33,7 +50,7 @@ components/sign     TxSentence, TxNumbers, RiskFlags, SignerAddress, ApproveFlow
 components/ui       Button (cva), Label, Wordmark, cn — safe on both surfaces
 lib/chain.ts        defineChain(4663) — the only place the chain is defined
 lib/motion.ts       one RAF loop (Tempus); Lenis, GSAP, blob subscribe in order
-lib/routes.ts       routing engine (MOCK) — getRoute / listMarkets / describeRoute
+lib/routes.ts       routing engine — encodeRouteId / getRoute / listMarkets / describeRoute
 lib/tokens.css      brand tokens
 ```
 
@@ -47,8 +64,8 @@ section enters; `blob/scene.ts` damps toward the target every frame. Poses keep 
 margins — only droplets sit among the type. Mobile / coarse pointer / reduced motion get the
 still (`public/blob-still.webp`, the master render) in the hero and no canvas.
 
-Sections: Hero → Ticker (engine sentences) → Stats (engine figures) → How it works → The sentence
-(pinned, cycles real routes) → Markets → Manifesto → The signing page (specimen) → Footer.
+Sections: Hero → Ticker (one sentence per open market) → Stats (figures read off the markets) →
+How it works → The sentence (pinned) → Markets → Manifesto → The signing page → Footer.
 
 ## The blob budget
 
@@ -60,14 +77,20 @@ It measures **~141 KB gz** (`next build`, sum of the dynamic chunks in
 `.next/react-loadable-manifest.json` for `BlobSwitch -> ./Blob`). Re-measure before adding to it.
 
 The blob loads only on `(min-width: 768px) and (pointer: fine)` without `prefers-reduced-motion`.
-Everything else gets `public/blob-still.svg`, which is always in the DOM for first paint.
+Everything else gets `public/blob-still.webp`, which is always in the DOM for first paint.
 
-## Placeholders to replace
+## Before deploying
 
-- `public/blob-still.svg` — old generated placeholder, unused; `blob-still.webp` is the master render.
-- `components/ui/Wordmark.tsx` — renders `mercure.exe_` in Departure Mono; swap for the wordmark SVG when it lands.
-- `lib/routes.ts` — mock routing engine. Keep the types, replace the bodies.
-- `lib/chain.ts` — RPC / explorer URLs for Robinhood Chain (4663) are best guesses; override with `NEXT_PUBLIC_RH_RPC_URL`.
+- Set `NEXT_PUBLIC_SITE_URL` to the real origin — OG images, `robots.txt` and the sitemap are
+  absolute and will otherwise point at localhost.
+- Set `NEXT_PUBLIC_REOWN_PROJECT_ID` if you want WalletConnect; without it the signing page
+  offers the injected (extension) connector only.
+- `lib/chain.ts` — confirm the RPC and explorer URLs for Robinhood Chain (4663); override the
+  RPC with `NEXT_PUBLIC_RH_RPC_URL`.
+- `lib/routes.ts` — market ids, rates and `buildTx()` still come from the constants in that
+  file rather than from the chain. See the note at the top of the module.
+- `components/ui/Wordmark.tsx` — renders `mercure.exe_` in Departure Mono; swap for the
+  wordmark SVG when it lands.
 
 ## Fonts
 

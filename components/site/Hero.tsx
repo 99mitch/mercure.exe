@@ -33,9 +33,7 @@ export function Hero() {
               The messenger runs onchain. Yield routes on Robinhood Chain you can read in one sentence and approve in one tap.
             </p>
             <div className="flex flex-wrap gap-3">
-              <Button href="/tx/demo" tone="limeFill" size="lg" disabled title="Routes open soon">
-                Open a route <span className="text-mono ml-1 opacity-70">· soon</span>
-              </Button>
+              <Magnetic><Button href="#markets" tone="limeFill" size="lg">See the markets</Button></Magnetic>
               <Magnetic><Button href="#how" tone="quiet" size="lg">How it works</Button></Magnetic>
             </div>
           </HeroCopy>

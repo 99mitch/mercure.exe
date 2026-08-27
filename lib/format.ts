@@ -29,3 +29,16 @@ export function formatCountdown(ms: number): string {
   const s = total % 60
   return `${m}:${s.toString().padStart(2, '0')}`
 }
+
+/** Long opaque identifiers, shown without wrapping the layout: "MS5kLm1v…1a2b3c4" */
+export function shortId(id: string, head = 8, tail = 6): string {
+  return id.length <= head + tail + 1 ? id : `${id.slice(0, head)}…${id.slice(-tail)}`
+}
+
+/** ms epoch -> "17:42 UTC" — the instant a route was issued, in one glanceable token. */
+export function formatIssuedAt(ms: number): string {
+  const d = new Date(ms)
+  const hh = d.getUTCHours().toString().padStart(2, '0')
+  const mm = d.getUTCMinutes().toString().padStart(2, '0')
+  return `${hh}:${mm} UTC`
+}

@@ -2,7 +2,8 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { describeRoute, getRoute, isExpired, toRouteTx } from '@/lib/routes'
-import { formatAmount, formatBps, formatFee } from '@/lib/format'
+import { addressUrl } from '@/lib/chain'
+import { formatAmount, formatBps, formatFee, formatIssuedAt, shortId } from '@/lib/format'
 import { Wordmark } from '@/components/ui/Wordmark'
 import { Label } from '@/components/ui/Label'
 import { TxSentence } from '@/components/sign/TxSentence'
@@ -19,12 +20,13 @@ type Params = { params: Promise<{ id: string }> }
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { id } = await params
   const route = await getRoute(id)
-  if (!route) return { title: 'Route not found' }
+  // Route links are private and short-lived: never let one into an index.
+  if (!route) return { title: 'Route not found', robots: { index: false, follow: false } }
   const sentence = describeRoute(route)
   return {
     title: sentence,
     description: 'Review and approve in your wallet.',
-    robots: { index: false },
+    robots: { index: false, follow: false },
     openGraph: { title: sentence, images: [`/api/og?tx=${encodeURIComponent(id)}`] },
   }
 }
@@ -45,6 +47,7 @@ export default async function TxPage({ params }: Params) {
     { label: 'Net APY', value: formatBps(route.netApyBps) },
     { label: 'Est. fee', value: formatFee(route.fee.wei, route.fee.symbol) },
     { label: 'Chain', value: `Robinhood Chain · ${route.chainId}` },
+    { label: 'Issued', value: formatIssuedAt(route.createdAt) },
   ]
 
   return (
@@ -53,7 +56,7 @@ export default async function TxPage({ params }: Params) {
         <Link href="/" className="text-grey-10 no-underline">
           <Wordmark className="text-[1.125rem]" cursor={false} />
         </Link>
-        <Label>Route {route.id}</Label>
+        <Label title={route.id}>Route {shortId(route.id)}</Label>
       </header>
 
       <div className="space-y-8">
@@ -66,7 +69,6 @@ export default async function TxPage({ params }: Params) {
         <SignerAddress />
 
         <ApproveFlow
-          routeId={route.id}
           tx={toRouteTx(route)}
           expiresAt={route.expiresAt}
           initialRemainingMs={expired ? 0 : route.expiresAt - now}
@@ -75,7 +77,15 @@ export default async function TxPage({ params }: Params) {
 
       <footer className="mt-16 border-t border-grey-70 pt-4">
         <p className="text-mono text-grey-40">
-          Contract <span className="text-grey-10 select-all break-all">{route.tx.to}</span>
+          Contract{' '}
+          <a
+            href={addressUrl(route.tx.to)}
+            target="_blank"
+            rel="noreferrer noopener"
+            className="link-line text-grey-10 break-all hover:text-lime"
+          >
+            {route.tx.to}
+          </a>
         </p>
       </footer>
     </main>

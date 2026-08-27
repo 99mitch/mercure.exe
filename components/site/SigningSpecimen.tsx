@@ -1,4 +1,3 @@
-import { Button } from '@/components/ui/Button'
 import { Label } from '@/components/ui/Label'
 import { Reveal } from './Reveal'
 
@@ -8,7 +7,7 @@ import { Reveal } from './Reveal'
  */
 export function SigningSpecimen() {
   return (
-    <section data-blob-pose="sign" className="relative z-10 border-t border-lime-deep px-5 py-24 sm:px-8 lg:px-12 lg:py-36" aria-labelledby="sign-title">
+    <section id="sign" data-blob-pose="sign" className="relative z-10 border-t border-lime-deep px-5 py-24 sm:px-8 lg:px-12 lg:py-36" aria-labelledby="sign-title">
       <div className="grid gap-16 lg:grid-cols-2">
         <Reveal>
           <Label as="p" className="mb-6"><span data-reveal>The signing page</span></Label>
@@ -21,11 +20,10 @@ export function SigningSpecimen() {
           <p className="mt-4 text-body text-grey-10/80 measure" data-reveal>
             Cancel weighs the same as Approve. Expired means expired. Nothing you see was computed anywhere but the routing engine.
           </p>
-          <div className="mt-10" data-reveal>
-            <Button href="/tx/demo" tone="lime" size="lg" disabled title="The signing page opens with the first routes">
-              See the page <span className="text-mono ml-1 opacity-70">· soon</span>
-            </Button>
-          </div>
+          <p className="mt-8 text-body text-grey-10/80 measure" data-reveal>
+            You reach it by link. A route link carries the route inside it — the market, the amount, the moment it was
+            issued — so it opens the same page for you as for whoever sent it, and it stops working ten minutes later.
+          </p>
         </Reveal>
 
         <Reveal className="relative border border-lime-deep bg-grey-90 p-6 sm:p-8 lg:mt-24">

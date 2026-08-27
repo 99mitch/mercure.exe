@@ -4,11 +4,13 @@ import { ROBINHOOD_CHAIN_ID } from './chain'
 import { formatAmount, formatBps } from './format'
 
 /**
- * Routing engine — mock.
+ * Routing engine.
  *
- * This module stands in for the routing service. The signing page renders ONLY what
- * comes back from `getRoute()`; it computes nothing on its own. When the real engine
- * lands, replace the bodies of `getRoute` / `listMarkets` and keep the types.
+ * The signing page renders ONLY what comes back from `getRoute()`; it computes nothing on
+ * its own. Routes are not stored: a route id *is* the route. `encodeRouteId` packs the
+ * intent (kind, market, amount, issue time) into a url-safe token, `getRoute` unpacks it and
+ * rebuilds the transaction. Whoever mints the link — this site or the system upstream of it —
+ * needs no shared database, and a link carries its own 10-minute expiry.
  */
 
 export type Asset = { symbol: string; address: Address; decimals: number }
@@ -22,6 +24,8 @@ export type Market = {
   netApyBps: number
   utilizationBps: number
   status: 'open' | 'paused'
+  /** Amount used when the site quotes this market as an example sentence. */
+  exampleAmount: string
 }
 
 export type RouteKind = 'deposit' | 'withdraw'
@@ -61,6 +65,7 @@ const MARKETS: Market[] = [
     netApyBps: 840,
     utilizationBps: 9400,
     status: 'open',
+    exampleAmount: '5000',
   },
   {
     key: 'morpho-usdg-wbtc',
@@ -71,6 +76,7 @@ const MARKETS: Market[] = [
     netApyBps: 712,
     utilizationBps: 8100,
     status: 'open',
+    exampleAmount: '25000',
   },
   {
     key: 'morpho-usdg-hood',
@@ -81,10 +87,11 @@ const MARKETS: Market[] = [
     netApyBps: 0,
     utilizationBps: 0,
     status: 'paused',
+    exampleAmount: '5000',
   },
 ]
 
-const ROUTE_TTL_MS = 10 * 60 * 1000
+export const ROUTE_TTL_MS = 10 * 60 * 1000
 const L2_GAS_PRICE_WEI = 50_000_000n // 0.05 gwei
 
 const morphoAbi = parseAbi([
@@ -117,14 +124,80 @@ function risksFor(kind: RouteKind, market: Market): string[] {
   return risks
 }
 
-type Seed = { kind: RouteKind; marketKey: string; amount: string; expired?: boolean }
+/* ------------------------------------------------------------------ route ids */
 
-const SEEDS: Record<string, Seed> = {
-  demo: { kind: 'deposit', marketKey: 'morpho-usdg-weth', amount: '5000' },
-  'demo-withdraw': { kind: 'withdraw', marketKey: 'morpho-usdg-weth', amount: '1250.5' },
-  'demo-wbtc': { kind: 'deposit', marketKey: 'morpho-usdg-wbtc', amount: '25000' },
-  expired: { kind: 'deposit', marketKey: 'morpho-usdg-weth', amount: '5000', expired: true },
+/** A route, before it has an id. Everything needed to rebuild it lives here. */
+export type RouteIntent = {
+  kind: RouteKind
+  marketKey: string
+  /** Decimal string in the loan asset's units, e.g. "1250.5". */
+  amount: string
+  /** ms epoch. Defaults to now; the 10-minute window runs from this instant. */
+  issuedAt?: number
 }
+
+const ID_VERSION = 1
+
+function toBase64Url(s: string): string {
+  const bytes = new TextEncoder().encode(s)
+  let bin = ''
+  for (const b of bytes) bin += String.fromCharCode(b)
+  return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')
+}
+
+function fromBase64Url(s: string): string | null {
+  if (!/^[A-Za-z0-9_-]+$/.test(s)) return null
+  try {
+    const b64 = s.replace(/-/g, '+').replace(/_/g, '/')
+    const bin = atob(b64 + '='.repeat((4 - (b64.length % 4)) % 4))
+    return new TextDecoder().decode(Uint8Array.from(bin, (c) => c.charCodeAt(0)))
+  } catch {
+    return null
+  }
+}
+
+/**
+ * FNV-1a over the payload. This catches a truncated or mistyped link — it is NOT a
+ * signature, and route ids are not secrets. Nothing here authorises anything: the id only
+ * describes a transaction the wallet shows in full before it is signed.
+ */
+function checksum(s: string): string {
+  let h = 0x811c9dc5
+  for (let i = 0; i < s.length; i++) {
+    h ^= s.charCodeAt(i)
+    h = Math.imul(h, 0x01000193) >>> 0
+  }
+  return h.toString(36).padStart(7, '0').slice(-7)
+}
+
+/** Mint the id for a route. `/tx/${encodeRouteId(intent)}` is a complete, shareable link. */
+export function encodeRouteId(intent: RouteIntent): string {
+  const issuedAt = intent.issuedAt ?? Date.now()
+  const body = [ID_VERSION, intent.kind === 'deposit' ? 'd' : 'w', intent.marketKey, intent.amount, Math.floor(issuedAt / 1000).toString(36)].join('|')
+  return `${toBase64Url(body)}.${checksum(body)}`
+}
+
+type DecodedIntent = Required<RouteIntent>
+
+function decodeRouteId(id: string): DecodedIntent | null {
+  const at = id.lastIndexOf('.')
+  if (at <= 0) return null
+  const body = fromBase64Url(id.slice(0, at))
+  if (!body || checksum(body) !== id.slice(at + 1)) return null
+
+  const [version, k, marketKey, amount, ts] = body.split('|')
+  if (Number(version) !== ID_VERSION) return null
+  if (k !== 'd' && k !== 'w') return null
+  if (!marketKey || !amount || !ts) return null
+  if (!/^\d+(\.\d+)?$/.test(amount)) return null
+
+  const issuedAt = parseInt(ts, 36) * 1000
+  if (!Number.isFinite(issuedAt) || issuedAt <= 0) return null
+
+  return { kind: k === 'd' ? 'deposit' : 'withdraw', marketKey, amount, issuedAt }
+}
+
+/* ------------------------------------------------------------------ the engine */
 
 export function listMarkets(): Market[] {
   return MARKETS
@@ -134,21 +207,25 @@ export function getMarket(key: string): Market | undefined {
   return MARKETS.find((m) => m.key === key)
 }
 
-/** Resolve a route id. Returns null when the engine has no such route. */
-export async function getRoute(id: string): Promise<Route | null> {
-  const seed = SEEDS[id]
-  if (!seed) return null
-  const market = getMarket(seed.marketKey)
+/** Build a route from an intent. Returns null when the engine would not offer it. */
+export function buildRoute(intent: RouteIntent): Route | null {
+  const market = getMarket(intent.marketKey)
   if (!market || market.status !== 'open') return null
 
-  const amount = parseUnits(seed.amount, market.loanAsset.decimals)
-  const tx = buildTx(seed.kind, market, amount)
-  const now = Date.now()
-  const createdAt = seed.expired ? now - ROUTE_TTL_MS - 60_000 : now
+  let amount: bigint
+  try {
+    amount = parseUnits(intent.amount, market.loanAsset.decimals)
+  } catch {
+    return null
+  }
+  if (amount <= 0n) return null
+
+  const issuedAt = intent.issuedAt ?? Date.now()
+  const tx = buildTx(intent.kind, market, amount)
 
   return {
-    id,
-    kind: seed.kind,
+    id: encodeRouteId({ ...intent, issuedAt }),
+    kind: intent.kind,
     chainId: ROBINHOOD_CHAIN_ID,
     amount,
     asset: market.loanAsset,
@@ -157,11 +234,20 @@ export async function getRoute(id: string): Promise<Route | null> {
     marketId: market.id,
     netApyBps: market.netApyBps,
     fee: { wei: tx.gas * L2_GAS_PRICE_WEI, symbol: 'ETH' },
-    risks: risksFor(seed.kind, market),
-    createdAt,
-    expiresAt: createdAt + ROUTE_TTL_MS,
+    risks: risksFor(intent.kind, market),
+    createdAt: issuedAt,
+    expiresAt: issuedAt + ROUTE_TTL_MS,
     tx,
   }
+}
+
+/** Resolve a route id. Returns null when the id is malformed or names no open market. */
+export async function getRoute(id: string): Promise<Route | null> {
+  const intent = decodeRouteId(id)
+  if (!intent) return null
+  const route = buildRoute(intent)
+  // `buildRoute` re-mints the id from the intent; keep the one the visitor arrived on.
+  return route ? { ...route, id } : null
 }
 
 /**
@@ -191,20 +277,25 @@ export function toRouteTx(route: Route): RouteTx {
   }
 }
 
-/** Aggregate figures for the site (mock — replace with the engine's stats endpoint). */
-export type Stats = { routedUsd: number; routesSigned: number; avgNetApyBps: number; openMarkets: number }
+/** Figures the site quotes. Every one is read off the open markets — nothing is estimated. */
+export type Stats = { avgNetApyBps: number; openMarkets: number; totalMarkets: number }
 export function getStats(): Stats {
   const open = MARKETS.filter((m) => m.status === 'open')
   return {
-    routedUsd: 12_400_000,
-    routesSigned: 1_284,
     avgNetApyBps: Math.round(open.reduce((a, m) => a + m.netApyBps, 0) / open.length),
     openMarkets: open.length,
+    totalMarkets: MARKETS.length,
   }
 }
 
-/** Sentences for the live ticker — every one of them a route the engine would actually offer. */
-export async function listRecentSentences(): Promise<string[]> {
-  const routes = await Promise.all(Object.keys(SEEDS).filter((k) => k !== 'expired').map((k) => getRoute(k)))
-  return routes.filter((r): r is Route => Boolean(r)).map(describeRoute)
+/**
+ * One route per open market, at that market's example amount — the sentences the site quotes.
+ * They run through the same `buildRoute`/`describeRoute` as a real link, so the site can never
+ * show a sentence the engine would not produce.
+ */
+export function listOfferedRoutes(): Route[] {
+  return MARKETS.filter((m) => m.status === 'open').flatMap((m) => {
+    const deposit = buildRoute({ kind: 'deposit', marketKey: m.key, amount: m.exampleAmount })
+    return deposit ? [deposit] : []
+  })
 }

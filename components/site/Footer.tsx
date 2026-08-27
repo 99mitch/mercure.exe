@@ -1,11 +1,13 @@
 import Link from 'next/link'
 import { Wordmark } from '@/components/ui/Wordmark'
 import { Label } from '@/components/ui/Label'
-import { ROBINHOOD_CHAIN_ID } from '@/lib/chain'
+import { ROBINHOOD_CHAIN_ID, robinhoodChain } from '@/lib/chain'
+
+const explorer = robinhoodChain.blockExplorers.default.url
 
 const COLS: [string, [string, string][]][] = [
-  ['Product', [['Open a route · soon', '#'], ['Markets', '#markets'], ['How it works', '#how']]],
-  ['Protocol', [[`Robinhood Chain · ${ROBINHOOD_CHAIN_ID}`, '#'], ['Morpho markets', '#markets'], ['The signing page · soon', '#']]],
+  ['Product', [['Markets', '#markets'], ['How it works', '#how'], ['The signing page', '#sign']]],
+  ['Protocol', [[`Robinhood Chain · ${ROBINHOOD_CHAIN_ID}`, explorer], ['Morpho markets', '#markets']]],
 ]
 
 export function Footer() {
@@ -22,10 +24,10 @@ export function Footer() {
             <ul className="space-y-2 text-mono">
               {links.map(([label, href]) => (
                 <li key={label}>
-                  {href === '#' ? (
-                    <span className={label.endsWith('soon') ? 'text-grey-40' : 'text-grey-10'}>{label}</span>
-                  ) : (
+                  {href.startsWith('#') ? (
                     <Link href={href} className="link-line text-grey-10 hover:text-lime">{label}</Link>
+                  ) : (
+                    <a href={href} target="_blank" rel="noreferrer noopener" className="link-line text-grey-10 hover:text-lime">{label}</a>
                   )}
                 </li>
               ))}
@@ -34,7 +36,7 @@ export function Footer() {
         ))}
       </div>
       <div className="mt-16 flex flex-col gap-2 border-t border-lime-deep pt-5 text-mono text-grey-40 md:flex-row md:justify-between">
-        <span>© 2026 mercure.exe — preview</span>
+        <span>© 2026 mercure.exe</span>
         <span>Chain id <span className="text-grey-10">{ROBINHOOD_CHAIN_ID}</span> · routes are described or not offered</span>
       </div>
     </footer>

@@ -1,18 +1,17 @@
-import { getStats } from '@/lib/routes'
+import { getStats, ROUTE_TTL_MS } from '@/lib/routes'
 import { formatBps } from '@/lib/format'
+import { ROBINHOOD_CHAIN_ID } from '@/lib/chain'
 import { Label } from '@/components/ui/Label'
 import { Reveal } from './Reveal'
 
-const usd = (n: number) => (n >= 1e6 ? `$${(n / 1e6).toFixed(1)}M` : `$${Math.round(n / 1e3)}k`)
-
-/** The numbers the site is allowed to be proud of. Every one comes from the engine's stats. */
+/** The numbers the site is allowed to quote. Every one is a fact about the engine or the chain. */
 export function Stats() {
   const s = getStats()
   const items: [string, string][] = [
-    ['Routed', usd(s.routedUsd)],
-    ['Routes signed', s.routesSigned.toLocaleString('en-US')],
     ['Avg net APY', formatBps(s.avgNetApyBps)],
-    ['Open markets', String(s.openMarkets)],
+    ['Open markets', `${s.openMarkets}/${s.totalMarkets}`],
+    ['Chain', String(ROBINHOOD_CHAIN_ID)],
+    ['Route window', `${ROUTE_TTL_MS / 60000} min`],
   ]
   return (
     <section data-blob-pose="stats" className="relative z-10 px-5 py-20 sm:px-8 lg:px-12 lg:py-28" aria-label="Protocol figures">

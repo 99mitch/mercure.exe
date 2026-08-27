@@ -24,3 +24,15 @@ export const robinhoodChain = defineChain({
 })
 
 export type RobinhoodChain = typeof robinhoodChain
+
+const explorerUrl = robinhoodChain.blockExplorers.default.url.replace(/\/$/, '')
+
+/** Explorer link for a transaction hash. */
+export function txUrl(hash: string): string {
+  return `${explorerUrl}/tx/${hash}`
+}
+
+/** Explorer link for a contract or wallet address. */
+export function addressUrl(address: string): string {
+  return `${explorerUrl}/address/${address}`
+}

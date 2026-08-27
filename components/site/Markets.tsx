@@ -3,12 +3,6 @@ import { formatBps } from '@/lib/format'
 import { Label } from '@/components/ui/Label'
 import { Reveal } from './Reveal'
 
-// Route ids per market — used again once routes open.
-const ROUTE_FOR_MARKET: Record<string, string> = {
-  'morpho-usdg-weth': 'demo',
-  'morpho-usdg-wbtc': 'demo-wbtc',
-}
-
 /** Live markets. Every number here came from the routing engine — the same source /tx reads. */
 export function Markets() {
   const markets = listMarkets()
@@ -32,13 +26,12 @@ export function Markets() {
                 <Label as="th" className="py-3 pr-6 font-normal">Market</Label>
                 <Label as="th" className="py-3 pr-6 font-normal text-right">Net APY</Label>
                 <Label as="th" className="py-3 pr-6 font-normal text-right">Utilization</Label>
-                <Label as="th" className="py-3 font-normal text-right">Route</Label>
+                <Label as="th" className="py-3 font-normal text-right">Status</Label>
               </tr>
             </thead>
             <tbody>
               {markets.map((m) => {
                 const open = m.status === 'open'
-                const routeId = ROUTE_FOR_MARKET[m.key]
                 return (
                   <tr key={m.key} className="group border-b border-lime-deep transition-colors duration-[var(--dur-fast)] hover:bg-lime-deep/40">
                     <td className="py-5 pr-6 pl-2 text-body text-grey-10">{m.protocol}</td>
@@ -46,11 +39,7 @@ export function Markets() {
                     <td className="py-5 pr-6 text-mono text-right text-lime">{open ? formatBps(m.netApyBps) : '—'}</td>
                     <td className="py-5 pr-6 text-mono text-right text-grey-10">{open ? formatBps(m.utilizationBps) : '—'}</td>
                     <td className="py-5 pr-2 text-mono text-right">
-                      {open && routeId ? (
-                        <span className="text-grey-40" title="Routes open soon">Soon</span>
-                      ) : (
-                        <span className="text-grey-40">Paused</span>
-                      )}
+                      <span className={open ? 'text-lime' : 'text-grey-40'}>{open ? 'Open' : 'Paused'}</span>
                     </td>
                   </tr>
                 )

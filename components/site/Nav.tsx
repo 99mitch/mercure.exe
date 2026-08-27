@@ -13,7 +13,7 @@ export function Nav() {
         <div className="flex items-center gap-7 text-mono">
           <a href="#how" className="link-line text-grey-10 hover:text-lime">How it works</a>
           <a href="#markets" className="link-line text-grey-10 hover:text-lime">Markets</a>
-          <span className="text-grey-40" aria-disabled="true" title="Routes open soon">Open a route · soon</span>
+          <a href="#sign" className="link-line text-grey-10 hover:text-lime">Signing</a>
         </div>
       </nav>
     </NavAutoHide>
